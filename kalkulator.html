@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kalkulator Hitung Cuan</title>
+  <link rel="stylesheet" href="style.minimal.css" />
+  <style>
+    .calculate-btn {
+      margin-top: 1.5rem;
+      background: #ff8409;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 0.5rem;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      display: block;
+      width: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+      <!-- Kiri: Riwayat -->
+      <div>
+        <a id="historyBtn" href="riwayat.html" style="display:none; background:#10b981; color:white; padding:0.5rem 1rem; border-radius:0.5rem; text-decoration:none; font-weight:bold;">
+          🔍 Lihat Riwayat
+        </a>
+      </div>
+
+      <!-- Tengah: Logo -->
+      <div style="flex: 1; text-align: center;">
+        <img src="logo.png" alt="Logo Hitung Cuan" class="logo" style="aspect-ratio: 1/1; height: 160px; object-fit: contain;" />
+
+      </div>
+
+      <!-- Kanan: Menu + Admin + Logout -->
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <div class="menu-container" style="position:relative;">
+          <button onclick="toggleMenu()" style="padding: 0.5rem 1rem; background:#111827; color:white; border:none; border-radius:0.5rem; font-weight:bold;">
+            ☰ Menu
+          </button>
+          <div id="dropdownMenu" style="display:none; position:absolute; right:0; background:white; border:1px solid #e5e7eb; box-shadow:0 4px 8px rgba(0,0,0,0.1); border-radius:0.5rem; margin-top:0.5rem; z-index:99;">
+            <a href="rekap-penjualan.html" style="display:block; padding:0.75rem 1rem; text-decoration:none; color:#111827;">📋 Rekap Penjualan</a>
+            <a href="riwayat.html" style="display:block; padding:0.75rem 1rem; text-decoration:none; color:#111827;">📜 Riwayat Kalkulasi</a>
+          </div>
+        </div>
+        <a id="adminPanelLink" href="admin.html" style="display:none; background:#2563eb; color:white; padding:0.5rem 1rem; border-radius:0.5rem; text-decoration:none; font-weight:bold;">
+          Kelola User
+        </a>
+        <button id="logoutBtn" style="padding: 0.5rem 1rem; background:#ef4444; color:white; border:none; border-radius:0.5rem; font-weight:bold; cursor:pointer;">
+          Logout
+        </button>
+      </div>
+    </header>
+<h2>Kalkulator Hitung Cuan</h2>
+    <div class="grid">
+      <div><label>HPP per Produk (Rp)</label><input type="number" id="productCost" value="0" /></div>
+      <div><label>Harga Jual per Produk (Rp)</label><input type="number" id="sellingPrice" value="0" /></div>
+      <div><label>Jumlah Penjualan</label><input type="number" id="sales" value="0" /></div>
+      <div><label>Total Iklan (Rp)</label><input type="number" id="adSpend" value="0" /></div>
+      <div><label>Biaya Admin Iklan (%)</label><input type="number" id="adminFee" value="0" min="0" max="100" /></div>
+      <div><label>Estimasi Return (%)</label><input type="number" id="returnRate" value="0" min="0" max="100" /></div>
+    </div>
+
+    <button id="calculateBtn" class="calculate-btn"> Hitungin Cuannya Bro! </button>
+
+    <h3>Hasil Perhitungan</h3>
+    <div class="result">
+      <div class="result-item green"><strong>Laba Bersih per Penjualan:</strong> <span id="netProfit">Rp0</span></div>
+      <div class="result-item green"><strong>Potensi Laba Total:</strong> <span id="potentialProfit">Rp0</span></div>
+      <div class="result-item"><strong>Margin Keuntungan:</strong> <span id="profitMargin">0%</span></div>
+      <div class="result-item"><strong>ROAS:</strong> <span id="roas">0</span></div>
+      <div class="result-item"><strong>Average CPR:</strong> <span id="cpr">Rp0</span></div>
+    </div>
+
+    <h3>Saran Evaluasi Iklan</h3>
+    <div class="evaluation-box" id="adEvaluation">
+      <p>Masukkan data dan klik tombol "Hitung" untuk melihat evaluasi iklan Anda...</p>
+    </div>
+  </div>
+
+  <script type="module" src="script.js"></script>
+
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJF3FKYkdRc8AKICpgqE_mFWb80xzGdro",
+      authDomain: "hitung-cuan.firebaseapp.com",
+      projectId: "hitung-cuan",
+      storageBucket: "hitung-cuan.firebasestorage.app",
+      messagingSenderId: "386744606371",
+      appId: "1:386744606371:web:b033a6567b643c7f5fa916",
+      measurementId: "G-9QXB07L6QW"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      if (!userDoc.exists() || userDoc.data().isActive !== true) {
+        alert("Akun Anda belum aktif. Hubungi admin.");
+        await signOut(auth);
+        window.location.href = "login.html";
+        return;
+      }
+
+      if (user.email === "pakangurame@gmail.com") {
+        document.getElementById("adminPanelLink").style.display = "inline-block";
+      }
+
+      document.getElementById("historyBtn").style.display = "inline-block";
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await signOut(auth);
+      window.location.href = "login.html";
+    });
+
+    document.getElementById("calculateBtn").addEventListener("click", () => {
+      calculate();
+    });
+  </script>
+
+
+<script>
+  function toggleMenu() {
+    const menu = document.getElementById("dropdownMenu");
+    menu.style.display = menu.style.display === "block" ? "none" : "block";
+  }
+  window.addEventListener("click", function(e) {
+    if (!e.target.closest(".menu-container")) {
+      const menu = document.getElementById("dropdownMenu");
+      if (menu) menu.style.display = "none";
+    }
+  });
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Daftar - Hitung Cuan</title>
+    <link rel="stylesheet" href="style.minimal.css" />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen;
+        background-color: #f9fafb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+      }
+      .register-container {
+        background: white;
+        padding: 2.5rem 2rem;
+        border-radius: 1.5rem;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.05);
+        width: 100%;
+        max-width: 380px;
+        box-sizing: border-box;
+      }
+      h2 {
+        margin-bottom: 1.5rem;
+        text-align: center;
+        color: #111827;
+        font-size: 1.5rem;
+      }
+      input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid #e5e7eb;
+        font-size: 1rem;
+        box-sizing: border-box;
+      }
+      button {
+        width: 100%;
+        padding: 0.75rem;
+        background-color: #111827;
+        color: white;
+        border: none;
+        border-radius: 0.75rem;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+      button:hover {
+        background-color: #1f2937;
+      }
+      .link {
+        margin-top: 1rem;
+        text-align: center;
+        font-size: 0.9rem;
+      }
+      .link a {
+        color: #3b82f6;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="register-container">
+      <h2>Buat Akun Hitung Cuan</h2>
+      <input type="email" id="reg-email" placeholder="Email" />
+      <input type="password" id="reg-password" placeholder="Password" />
+      <button id="register-btn">Daftar</button>
+
+      <div class="link">
+        Sudah punya akun? <a href="login.html">Login</a>
+      </div>
+    </div>
+
+    <!-- Firebase Config -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+      import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+      import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyCJF3FKYkdRc8AKICpgqE_mFWb80xzGdro",
+        authDomain: "hitung-cuan.firebaseapp.com",
+        projectId: "hitung-cuan",
+        storageBucket: "hitung-cuan.firebasestorage.app",
+        messagingSenderId: "386744606371",
+        appId: "1:386744606371:web:b033a6567b643c7f5fa916",
+        measurementId: "G-9QXB07L6QW"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      document.getElementById("register-btn").addEventListener("click", async () => {
+        const email = document.getElementById("reg-email").value;
+        const password = document.getElementById("reg-password").value;
+
+        if (!email || !password) {
+          alert("Email dan password harus diisi.");
+          return;
+        }
+
+        try {
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          const user = userCredential.user;
+
+          // Tambahkan ke Firestore
+          await setDoc(doc(db, "users", user.uid), {
+            email: user.email,
+            isActive: false // default belum aktif
+          });
+
+          alert("Registrasi berhasil! Silakan tunggu verifikasi.");
+          window.location.href = "login.html";
+        } catch (error) {
+          console.error("Gagal daftar:", error.message);
+          alert(error.message);
+        }
+      });
+    </script>
+  </body>
+</html>

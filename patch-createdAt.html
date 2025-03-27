@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head><title>Patch createdAt</title></head>
+<body>
+  <h3>Memproses...</h3>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      doc,
+      updateDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJF3FKYkdRc8AKICpgqE_mFWb80xzGdro",
+      authDomain: "hitung-cuan.firebaseapp.com",
+      projectId: "hitung-cuan",
+      storageBucket: "hitung-cuan.firebasestorage.app",
+      messagingSenderId: "386744606371",
+      appId: "1:386744606371:web:b033a6567b643c7f5fa916",
+      measurementId: "G-9QXB07L6QW"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const adminEmail = "pakangurame@gmail.com";
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user || user.email !== adminEmail) {
+        alert("Akses ditolak. Hanya admin bisa menjalankan script ini.");
+        window.location.href = "login.html";
+        return;
+      }
+
+      const querySnapshot = await getDocs(collection(db, "users"));
+      let count = 0;
+
+      for (const docSnap of querySnapshot.docs) {
+        const data = docSnap.data();
+        if (!data.createdAt) {
+          await updateDoc(doc(db, "users", docSnap.id), {
+            createdAt: serverTimestamp()
+          });
+          console.log(`✅ createdAt ditambahkan untuk ${data.email}`);
+          count++;
+        }
+      }
+
+      alert(`Proses selesai. createdAt ditambahkan untuk ${count} user.`);
+    });
+  </script>
+</body>
+</html>

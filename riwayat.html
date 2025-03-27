@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Riwayat Kalkulasi - Hitung Cuan</title>
+  <link rel="stylesheet" href="style.minimal.css" />
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #f9fafb;
+      padding: 2rem;
+      color: #111827;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h2 {
+      text-align: center;
+      font-weight: 600;
+      font-size: 1.75rem;
+      margin-bottom: 2rem;
+    }
+    .btn-group {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+    .btn {
+      background: #2563eb;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      text-decoration: none;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+    }
+    .btn.danger {
+      background: #dc2626;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #fff;
+      border-radius: 1rem;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+    }
+    th, td {
+      padding: 1rem;
+      text-align: left;
+      font-size: 0.95rem;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    th {
+      background-color: #f3f4f6;
+      color: #374151;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+    }
+    th.sort-asc::after {
+      content: " \25B2";
+    }
+    th.sort-desc::after {
+      content: " \25BC";
+    }
+    tr:hover {
+      background-color: #f9fafb;
+    }
+    .positive {
+      color: #16a34a;
+      font-weight: 600;
+    }
+    .negative {
+      color: #dc2626;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="btn-group">
+      <a href="kalkulator.html" class="btn">← Kembali ke Kalkulator</a>
+      <button id="deleteAllBtn" class="btn danger">🗑 Hapus Semua Riwayat</button>
+    </div>
+    <h2>Riwayat Kalkulasi Anda</h2>
+    <table>
+      <thead>
+        <tr>
+          <th data-key="timestamp">Tanggal</th>
+          <th data-key="productCost">HPP per Produk</th>
+          <th data-key="sellingPrice">Harga Jual</th>
+          <th data-key="sales">Penjualan</th>
+          <th data-key="adSpend">Iklan</th>
+          <th data-key="adminFee">Biaya Admin</th>
+          <th data-key="netProfitPerSale">Net Profit per Produk</th>
+          <th data-key="potentialProfit">Potensi Profit Total</th>
+          <th data-key="roas">ROAS</th>
+        </tr>
+      </thead>
+      <tbody id="riwayatBody">
+        <tr><td colspan="9">Memuat data...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+    import { getFirestore, collection, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJF3FKYkdRc8AKICpgqE_mFWb80xzGdro",
+      authDomain: "hitung-cuan.firebaseapp.com",
+      projectId: "hitung-cuan",
+      storageBucket: "hitung-cuan.firebasestorage.app",
+      messagingSenderId: "386744606371",
+      appId: "1:386744606371:web:b033a6567b643c7f5fa916",
+      measurementId: "G-9QXB07L6QW"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const tbody = document.getElementById("riwayatBody");
+    const rows = [];
+
+    let lastSortedKey = null;
+    let lastSortAsc = true;
+
+    function rupiah(value) {
+      return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0
+      }).format(value);
+    }
+
+    function renderTable(data) {
+      tbody.innerHTML = "";
+      if (!data.length) {
+        tbody.innerHTML = "<tr><td colspan='9'>Belum ada riwayat kalkulasi.</td></tr>";
+        return;
+      }
+      data.forEach((row) => {
+        const tr = document.createElement("tr");
+        const potential = row.potentialProfit;
+        const potentialClass = potential != null ? (potential >= 0 ? 'positive' : 'negative') : '';
+        const potentialValue = potential != null ? rupiah(potential) : '-';
+        tr.innerHTML = `
+          <td>${new Date(row.timestamp).toLocaleString("id-ID")}</td>
+          <td>${rupiah(row.productCost)}</td>
+          <td>${rupiah(row.sellingPrice)}</td>
+          <td>${row.sales}</td>
+          <td>${rupiah(row.adSpend)}</td>
+          <td>${row.adminFee}%</td>
+          <td>${rupiah(row.netProfitPerSale)}</td>
+          <td class="${potentialClass}">${potentialValue}</td>
+          <td>${row.roas}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function sortTable(key, isNumber = true) {
+      const ths = document.querySelectorAll("th[data-key]");
+      ths.forEach(th => th.classList.remove("sort-asc", "sort-desc"));
+
+      const isAsc = key === lastSortedKey ? !lastSortAsc : true;
+      lastSortedKey = key;
+      lastSortAsc = isAsc;
+
+      const th = [...ths].find(th => th.dataset.key === key);
+      th.classList.add(isAsc ? "sort-asc" : "sort-desc");
+
+      const sorted = [...rows].sort((a, b) => {
+        const valA = key === 'timestamp' ? new Date(a[key]) : parseFloat(a[key]);
+        const valB = key === 'timestamp' ? new Date(b[key]) : parseFloat(b[key]);
+        return isAsc ? valA - valB : valB - valA;
+      });
+
+      renderTable(sorted);
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        alert("Silakan login terlebih dahulu.");
+        window.location.href = "login.html";
+        return;
+      }
+      const kalkulasiRef = collection(db, "users", user.uid, "history");
+      const snapshot = await getDocs(kalkulasiRef);
+      tbody.innerHTML = "";
+      if (snapshot.empty) {
+        tbody.innerHTML = "<tr><td colspan='9'>Belum ada riwayat kalkulasi.</td></tr>";
+        return;
+      }
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        data._id = docSnap.id;
+        rows.push(data);
+      });
+      rows.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      renderTable(rows);
+
+      const deleteAllBtn = document.getElementById("deleteAllBtn");
+      deleteAllBtn.addEventListener("click", async () => {
+        if (!confirm("Yakin ingin menghapus SEMUA riwayat kalkulasi?")) return;
+        for (const row of rows) {
+          await deleteDoc(doc(db, "users", user.uid, "history", row._id));
+        }
+        location.reload();
+      });
+    });
+
+    document.querySelectorAll("th[data-key]").forEach(th => {
+      th.addEventListener("click", () => sortTable(th.dataset.key, th.dataset.key !== 'timestamp'));
+    });
+  </script>
+</body>
+</html>
