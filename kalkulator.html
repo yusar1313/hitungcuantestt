@@ -292,7 +292,10 @@
       const adminLink = document.getElementById("adminLink");
       console.log("Email login:", user.email);
       if (user.email === "pakangurame@gmail.com") {
+        console.log("Tampilkan Admin Panel");
         adminLink.style.display = "inline-block";
+      } else {
+        console.log("Bukan admin");
       }
         alert("Akun Anda belum aktif. Hubungi admin.");
         await signOut(auth);
