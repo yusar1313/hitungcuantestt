@@ -200,11 +200,11 @@
 <body>
 <div id="sidebarBackdrop" onclick="toggleSidebar()"></div>
 <div id="sidebarMenu">
-<a class="active" href="/kalkulator">
+<a class="active" href="kalkulator.html">
 <svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M9 5h6M9 9h6m-6 4h6m-6 4h6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
       Kalkulator
     </a>
-    <a href="/riwayat">
+    <a href="riwayat.html">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <path d="M4 16h2V8H4v8zm6 0h2V4h-2v12zm6 0h2v-6h-2v6z" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
@@ -224,10 +224,10 @@
 </header>
 <h2 style="text-align: center;">Kalkulator Hitung Cuan</h2>
 <div class="grid">
-<div><label>HPP per Produk (Rp)</label><input id="productCost" type="text" value=""/></div>
-<div><label>Harga Jual per Produk (Rp)</label><input id="sellingPrice" type="text" value=""/></div>
+<div><label>HPP per Produk (Rp)</label><input id="productCost" type="number" value=""/></div>
+<div><label>Harga Jual per Produk (Rp)</label><input id="sellingPrice" type="number" value=""/></div>
 <div><label>Jumlah Penjualan</label><input id="sales" type="number" value=""/></div>
-<div><label>Total Iklan (Rp)</label><input id="adSpend" type="text" value=""/></div>
+<div><label>Total Iklan (Rp)</label><input id="adSpend" type="number" value=""/></div>
 <div><label>Biaya Admin Iklan (%)</label><input id="adminFee" max="100" min="0" type="number" value=""/></div>
 <div><label>Estimasi Return (%)</label><input id="returnRate" max="100" min="0" type="number" value=""/></div>
 </div>
@@ -290,9 +290,12 @@
       if (!userDoc.exists() || userDoc.data().isActive !== true) {
 
       const adminLink = document.getElementById("adminLink");
-      console.log("Logged in as:", user.email);
+      console.log("Email login:", user.email);
       if (user.email === "pakangurame@gmail.com") {
+        console.log("Tampilkan Admin Panel");
         adminLink.style.display = "flex";
+      } else {
+        console.log("Bukan admin, sembunyikan Admin Panel");
       }
         alert("Akun Anda belum aktif. Hubungi admin.");
         await signOut(auth);
