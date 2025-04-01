@@ -198,6 +198,10 @@
 </style>
 </head>
 <body>
+<a href="/admin" id="adminLink" style="display:none; position: fixed; top: 20px; right: 20px; background-color: #1d4ed8; color: white; padding: 10px 16px; border-radius: 8px; font-weight: bold; z-index: 9999; text-decoration: none;">
+  🔐 Admin Panel
+</a>
+
 <div id="sidebarBackdrop" onclick="toggleSidebar()"></div>
 <div id="sidebarMenu">
 <a class="active" href="kalkulator.html">
@@ -292,10 +296,10 @@
       const adminLink = document.getElementById("adminLink");
       console.log("Email login:", user.email);
       if (user.email === "pakangurame@gmail.com") {
-        console.log("Tampilkan Admin Panel");
+        console.log("✅ Admin terdeteksi, tampilkan tombol");
         adminLink.style.display = "inline-block";
       } else {
-        console.log("Bukan admin");
+        console.log("❌ Bukan admin");
       }
         alert("Akun Anda belum aktif. Hubungi admin.");
         await signOut(auth);
