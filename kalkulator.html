@@ -210,14 +210,10 @@
       </svg>
       Histori Kalkulator
     </a>    
-    <a href="/rekap-penjualan">
+    <a href="rekap-penjualan.html">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M9 17v-2h6v2m-3-9a4 4 0 014 4v1H8v-1a4 4 0 014-4z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
             Rekap Penjualan
           </a>
-   <a href="/admin" id="adminLink" style="display: none;">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M9 17v-2h6v2m-3-9a4 4 0 014 4v1H8v-1a4 4 0 014-4z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-                  Admin Panel
-           </a>
     
 <button id="logoutBtn">Logout</button>
 </div>
@@ -294,6 +290,7 @@
       if (!userDoc.exists() || userDoc.data().isActive !== true) {
 
       const adminLink = document.getElementById("adminLink");
+      console.log("Logged in as:", user.email);
       if (user.email === "pakangurame@gmail.com") {
         adminLink.style.display = "flex";
       }
