@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -10,23 +9,24 @@
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
       background-color: #f9fafb;
-      padding: 2rem;
+      padding: 1rem;
     }
     h2 {
       text-align: center;
       margin-bottom: 1rem;
     }
     .search-box {
-      max-width: 400px;
-      margin: 0 auto 2rem;
+      max-width: 500px;
+      margin: 0 auto 1.5rem;
       text-align: center;
     }
-    .search-box input {
+    .search-box input, .search-box select {
       width: 100%;
       padding: 0.75rem;
       font-size: 1rem;
       border: 1px solid #ccc;
       border-radius: 0.5rem;
+      margin-bottom: 1rem;
     }
     table {
       width: 100%;
@@ -40,6 +40,7 @@
       padding: 1rem;
       border-bottom: 1px solid #e5e7eb;
       text-align: left;
+      font-size: 0.9rem;
     }
     th {
       background-color: #f3f4f6;
@@ -51,6 +52,7 @@
       border-radius: 0.5rem;
       cursor: pointer;
       font-weight: bold;
+      margin-right: 0.5rem;
     }
     .btn-activate {
       background-color: #16a34a;
@@ -58,6 +60,10 @@
     }
     .btn-deactivate {
       background-color: #dc2626;
+      color: white;
+    }
+    .btn-delete {
+      background-color: #6b7280;
       color: white;
     }
     .logout {
@@ -69,11 +75,34 @@
       border-radius: 0.5rem;
       cursor: pointer;
       font-weight: bold;
+      margin-bottom: 1rem;
     }
     .uid {
       font-size: 0.75rem;
       color: #6b7280;
-      word-break: break-all;
+      word-break: break-word;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+      .search-box input, .search-box select {
+        font-size: 0.95rem;
+      }
+      table {
+        font-size: 0.85rem;
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+      th, td {
+        padding: 0.6rem;
+      }
+      .logout {
+        width: 100%;
+        margin-bottom: 1rem;
+      }
     }
   </style>
 </head>
@@ -82,6 +111,11 @@
   <h2>Admin Panel - Manajemen User</h2>
   <div class="search-box">
     <input type="text" id="searchInput" placeholder="Cari user berdasarkan email..." />
+    <select id="statusFilter">
+      <option value="all">🔍 Semua User</option>
+      <option value="active">✅ Aktif</option>
+      <option value="inactive">❌ Belum Aktif</option>
+    </select>
   </div>
   <table>
     <thead>
@@ -99,7 +133,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-    import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCJF3FKYkdRc8AKICpgqE_mFWb80xzGdro",
@@ -118,6 +152,7 @@
     const adminEmail = "pakangurame@gmail.com";
     const userTable = document.getElementById("userTable");
     const searchInput = document.getElementById("searchInput");
+    const statusFilter = document.getElementById("statusFilter");
     const logoutBtn = document.getElementById("logoutBtn");
 
     logoutBtn.addEventListener("click", async () => {
@@ -134,24 +169,35 @@
     }
 
     function renderTable(data) {
+      const keyword = searchInput.value.toLowerCase();
+      const status = statusFilter.value;
       userTable.innerHTML = "";
-      data.forEach(({ id, email, isActive, createdAt }) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${email}</td>
-          <td>${isActive ? "✅ Aktif" : "❌ Belum Aktif"}</td>
-          <td>${formatDate(createdAt)}</td>
-          <td class="uid">${id}</td>
-          <td>
-            <button class="btn ${isActive ? "btn-deactivate" : "btn-activate"}"
-              data-uid="${id}"
-              data-active="${isActive}">
-              ${isActive ? "Nonaktifkan" : "Aktifkan"}
-            </button>
-          </td>
-        `;
-        userTable.appendChild(row);
-      });
+      data
+        .filter(user => user.email.toLowerCase().includes(keyword))
+        .filter(user => {
+          if (status === "active") return user.isActive;
+          if (status === "inactive") return !user.isActive;
+          return true;
+        })
+        .forEach(({ id, email, isActive, createdAt }) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${email}</td>
+            <td>${isActive ? "✅ Aktif" : "❌ Belum Aktif"}</td>
+            <td>${formatDate(createdAt)}</td>
+            <td class="uid">${id}</td>
+            <td>
+              <button class="btn ${isActive ? "btn-deactivate" : "btn-activate"}"
+                data-uid="${id}"
+                data-action="toggle"
+                data-active="${isActive}">
+                ${isActive ? "Nonaktifkan" : "Aktifkan"}
+              </button>
+              <button class="btn btn-delete" data-uid="${id}" data-action="delete">Hapus</button>
+            </td>
+          `;
+          userTable.appendChild(row);
+        });
     }
 
     onAuthStateChanged(auth, async (user) => {
@@ -179,17 +225,29 @@
     userTable.addEventListener("click", async (e) => {
       if (e.target.tagName === "BUTTON") {
         const uid = e.target.dataset.uid;
-        const current = e.target.dataset.active === "true";
-        await updateDoc(doc(db, "users", uid), { isActive: !current });
-        alert(`User ${current ? "dinonaktifkan" : "diaktifkan"}.`);
-        window.location.reload();
+        const action = e.target.dataset.action;
+
+        if (action === "toggle") {
+          const current = e.target.dataset.active === "true";
+          await updateDoc(doc(db, "users", uid), { isActive: !current });
+          alert(`User ${current ? "dinonaktifkan" : "diaktifkan"}.`);
+          window.location.reload();
+        } else if (action === "delete") {
+          const konfirmasi = confirm("Yakin ingin menghapus user ini secara permanen?");
+          if (!konfirmasi) return;
+          await deleteDoc(doc(db, "users", uid));
+          alert("User berhasil dihapus.");
+          window.location.reload();
+        }
       }
     });
 
     searchInput.addEventListener("input", () => {
-      const keyword = searchInput.value.toLowerCase();
-      const filtered = userDataList.filter(user => user.email.toLowerCase().includes(keyword));
-      renderTable(filtered);
+      renderTable(userDataList);
+    });
+
+    statusFilter.addEventListener("change", () => {
+      renderTable(userDataList);
     });
   </script>
 </body>

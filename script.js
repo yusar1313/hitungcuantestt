@@ -27,6 +27,14 @@ document.querySelectorAll('input').forEach(input => {
 });
 
 function formatRupiah(value) {
+  const isNegative = value < 0;
+  const formatted = new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(Math.abs(value));
+  return isNegative ? '-' + formatted : formatted;
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
@@ -44,7 +52,7 @@ function handlePaste(e) {
 }
 
 function cleanNumber(id) {
-  return parseFloat(document.getElementById(id)?.value.replace(/[^\d.]/g, '')) || 0;
+  return parseFloat(document.getElementById(id)?.value.replace(/\./g, '')) || 0;
 }
 
 function calculate() {
@@ -149,3 +157,28 @@ function evaluateAdPerformance(profitMargin, roas, cpr) {
 }
 
 window.calculate = calculate;
+
+
+
+// Format input fields with ribuan separator (e.g. 1000000 -> 1.000.000)
+function formatInputField(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  el.addEventListener("input", (e) => {
+    const value = e.target.value.replace(/\./g, "");
+    if (!value) {
+      e.target.value = "";
+      return;
+    }
+    e.target.value = new Intl.NumberFormat("id-ID").format(parseInt(value));
+  });
+
+  el.addEventListener("blur", (e) => {
+    const value = e.target.value.replace(/\./g, "");
+    e.target.value = value ? new Intl.NumberFormat("id-ID").format(parseInt(value)) : "";
+  });
+}
+
+// Apply to relevant input IDs
+["productCost", "sellingPrice", "sales", "adSpend", "adminFee", "returnRate"].forEach(formatInputField);

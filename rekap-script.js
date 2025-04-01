@@ -1,4 +1,4 @@
-// rekap-script.js - Versi Manual Filter dengan Tombol
+// rekap-script.js - Patch warna langsung di-render
 
 import { simpanRekapPenjualan, getRekapUser, cekLogin } from "./firebase.js";
 
@@ -15,37 +15,20 @@ const dateInput = document.getElementById("dailyDate");
 const productInput = document.getElementById("dailyProduct");
 const tableBody = document.querySelector("#rekapTable tbody");
 const notifSuccess = document.getElementById("notifSuccess");
-
 const filterRange = document.getElementById("filterRange");
-
-// ⛳ Tambahkan tombol manual
-const filterBtn = document.createElement("button");
-filterBtn.id = "filterBtn";
-filterBtn.innerText = "🔍 Filter";
-filterBtn.style.marginLeft = "0.5rem";
-filterBtn.className = "btn";
-filterRange?.insertAdjacentElement("afterend", filterBtn);
-
-const resetBtn = document.createElement("button");
-resetBtn.id = "resetFilter";
-resetBtn.innerText = "♻️ Reset";
-resetBtn.style.marginLeft = "0.5rem";
-resetBtn.className = "btn";
-filterBtn?.insertAdjacentElement("afterend", resetBtn);
 
 let rekapData = [];
 let allData = [];
 let currentUid = null;
-let selectedStart = "", selectedEnd = "";
 
 qtyInput.addEventListener("input", hitungOtomatis);
 adSpendInput.addEventListener("input", hitungOtomatis);
 
 function hitungOtomatis() {
-  const hpp = parseInt(hppInput.value) || 0;
-  const profit = parseInt(profitInput.value) || 0;
+  const hpp = parseInt(hppInput.value.replace(/\./g, '')) || 0;
+  const profit = parseInt(profitInput.value.replace(/\./g, '')) || 0;
   const qty = parseInt(qtyInput.value) || 0;
-  const iklan = parseInt(adSpendInput.value) || 0;
+  const iklan = parseInt(adSpendInput.value.replace(/\./g, '')) || 0;
 
   const totalHpp = hpp * qty;
   const gross = profit * qty;
@@ -69,9 +52,9 @@ simpanBtn.addEventListener("click", async () => {
   const tanggal = dateInput.value;
   const produk = productInput.value.trim();
   const qty = parseInt(qtyInput.value);
-  const hpp = parseInt(hppInput.value);
-  const profit = parseInt(profitInput.value);
-  const iklan = parseInt(adSpendInput.value);
+  const hpp = parseInt(hppInput.value.replace(/\./g, ''));
+  const profit = parseInt(profitInput.value.replace(/\./g, ''));
+  const iklan = parseInt(adSpendInput.value.replace(/\./g, ''));
 
   if (!tanggal || !produk || !qty || !hpp || !profit) {
     alert("Isi semua field yang dibutuhkan!");
@@ -117,9 +100,9 @@ function tampilkanData() {
       <td>${d.tanggal}</td>
       <td>${d.produk}</td>
       <td><input type="number" class="edit-qty" value="${d.qty}" style="width:60px" disabled /></td>
-      <td><input type="number" class="edit-iklan" value="${d.iklan}" style="width:80px" disabled /></td>
+      <td><input type="text" class="edit-iklan" value="Rp ${d.iklan.toLocaleString('id-ID')}" style="width:125px" disabled /></td>
       <td class="td-gross">Rp ${d.gross.toLocaleString("id-ID")}</td>
-      <td class="td-net">Rp ${d.net.toLocaleString("id-ID")}</td>
+      <td class="td-net ${d.net > 0 ? 'profit-positive' : d.net < 0 ? 'profit-negative' : ''}">Rp ${d.net.toLocaleString("id-ID")}</td>
       <td>
         <button class="btn-edit" data-index="${index}" data-mode="edit">✏️ Edit</button>
         <button class="btn-delete" data-index="${index}">🗑️</button>
@@ -128,6 +111,9 @@ function tampilkanData() {
     tableBody.appendChild(tr);
   });
 }
+
+// ... sisanya tetap
+
 
 tableBody.addEventListener("click", async (e) => {
   const btn = e.target.closest("button[data-index]");
@@ -146,11 +132,32 @@ tableBody.addEventListener("click", async (e) => {
     if (btn.dataset.mode === "edit") {
       qtyInput.disabled = false;
       iklanInput.disabled = false;
+      // Format input "edit-iklan" saat masuk mode edit (pakai Rp dan titik)
+      iklanInput.addEventListener("input", (e) => {
+        const val = e.target.value.replace(/[^\d]/g, "");
+        if (!val) {
+          e.target.value = "";
+          return;
+        }
+        const formatted = new Intl.NumberFormat("id-ID").format(parseInt(val));
+        e.target.value = "Rp " + formatted;
+      });
+
+      iklanInput.addEventListener("focus", (e) => {
+        const val = e.target.value.replace(/[^\d]/g, "");
+        e.target.value = val ? "Rp " + new Intl.NumberFormat("id-ID").format(parseInt(val)) : "";
+      });
+
+      iklanInput.addEventListener("blur", (e) => {
+        const val = e.target.value.replace(/[^\d]/g, "");
+        e.target.value = val ? "Rp " + new Intl.NumberFormat("id-ID").format(parseInt(val)) : "";
+      });
+
       btn.innerText = "💾 Simpan";
       btn.dataset.mode = "save";
     } else {
       const qty = parseInt(qtyInput.value);
-      const iklan = parseInt(iklanInput.value);
+      const iklan = parseInt(iklanInput.value.replace(/[^\d]/g, ""));
       const profitPerProduk = d.profitPerProduk || d.gross / d.qty;
       const gross = profitPerProduk * qty;
       const totalHpp = (parseInt(hppInput.value) || 0) * qty;
@@ -160,7 +167,11 @@ tableBody.addEventListener("click", async (e) => {
       await updateRekapUser(currentUid, docId, { qty, iklan, gross, net });
 
       tdGross.innerText = "Rp " + gross.toLocaleString("id-ID");
+      
       tdNet.innerText = "Rp " + net.toLocaleString("id-ID");
+      tdNet.classList.remove("text-green-600", "text-red-600");
+      tdNet.classList.add(net >= 0 ? "text-green-600" : "text-red-600");
+
       qtyInput.disabled = true;
       iklanInput.disabled = true;
       btn.innerText = "✏️ Edit";
@@ -203,31 +214,95 @@ function hitungRingkasan() {
   document.getElementById("summaryMargin").innerText = margin.toFixed(1) + "%";
   document.getElementById("summaryRoas").innerText = roas.toFixed(2);
   document.getElementById("summaryCpr").innerText = "Rp" + Math.round(cpr).toLocaleString("id-ID");
+  document.getElementById("summaryTotalIklan").innerText = "Rp" + totalAd.toLocaleString("id-ID");
 }
 
-// Akhir dari konfigurasi Litepicker
-new Litepicker({
-    element: document.getElementById("filterRange"),
-    singleMode: false,
-    numberOfMonths: 2,
-    numberOfColumns: 2,
-    format: "YYYY-MM-DD",
-    autoApply: true,
-    onSelect: (start, end) => {
-      selectedStart = start.format("YYYY-MM-DD");
-      selectedEnd = end.format("YYYY-MM-DD");
-  
-      const startDateNum = parseInt(selectedStart.replace(/-/g, ""));
-      const endDateNum = parseInt(selectedEnd.replace(/-/g, ""));
-  
-      rekapData = allData.filter((d) => {
-        const tanggalNum = parseInt(d.tanggal.replace(/-/g, ""));
-        return tanggalNum >= startDateNum && tanggalNum <= endDateNum;
-      });
-  
+document.addEventListener("DOMContentLoaded", function () {
+  flatpickr("#filterRange", {
+    mode: "range",
+    dateFormat: "Y-m-d",
+    onChange: function(selectedDates) {
+      if (selectedDates.length === 1) {
+        const only = selectedDates[0].toLocaleDateString("sv-SE");
+        rekapData = allData.filter((d) => d.tanggal === only);
+      } else if (selectedDates.length === 2) {
+        const selectedStart = selectedDates[0].toLocaleDateString("sv-SE");
+        const selectedEnd = selectedDates[1].toLocaleDateString("sv-SE");
+
+        const startDateNum = parseInt(selectedStart.replace(/-/g, ""));
+        const endDateNum = parseInt(selectedEnd.replace(/-/g, ""));
+
+        rekapData = allData
+          .filter((d) => {
+            const tanggalNum = parseInt(d.tanggal.replace(/-/g, ""));
+            return tanggalNum >= startDateNum && tanggalNum <= endDateNum;
+          })
+          .sort((a, b) => b.tanggal.localeCompare(a.tanggal));
+      }
+
       tampilkanData();
       hitungRingkasan();
     }
   });
-  
+});
 
+document.querySelectorAll("#filterPresets button").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const range = btn.dataset.range;
+    if (range === "today") {
+      filterByPreset(1);
+    } else if (range === "last7") {
+      filterByPreset(7);
+    } else if (range === "last14") {
+      filterByPreset(14);
+    } else if (range === "last30") {
+      filterByPreset(30);
+    }
+  });
+});
+
+function filterByPreset(jumlahHari) {
+  const now = new Date();
+  const endDate = now.toLocaleDateString("sv-SE");
+  const startDate = new Date(now);
+  startDate.setDate(startDate.getDate() - jumlahHari + 1);
+
+  const startDateStr = startDate.toLocaleDateString("sv-SE");
+
+  const startDateNum = parseInt(startDateStr.replace(/-/g, ""));
+  const endDateNum = parseInt(endDate.replace(/-/g, ""));
+
+  rekapData = allData
+    .filter((d) => {
+      const tanggalNum = parseInt(d.tanggal.replace(/-/g, ""));
+      return tanggalNum >= startDateNum && tanggalNum <= endDateNum;
+    })
+    .sort((a, b) => b.tanggal.localeCompare(a.tanggal));
+
+  tampilkanData();
+  hitungRingkasan();
+}
+
+
+
+// Format input fields with comma (e.g. 1000000 -> 1,000,000)
+function formatInputWithComma(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  el.addEventListener("input", (e) => {
+    const value = e.target.value.replace(/[^\d]/g, "");
+    if (!value) {
+      e.target.value = "";
+      return;
+    }
+    e.target.value = new Intl.NumberFormat("id-ID").format(parseInt(value));
+  });
+
+  el.addEventListener("blur", (e) => {
+    const value = e.target.value.replace(/[^\d]/g, "");
+    e.target.value = value ? new Intl.NumberFormat("id-ID").format(parseInt(value)) : "";
+  });
+}
+
+["baseHpp", "baseProfit", "dailyAdSpend"].forEach(formatInputWithComma);

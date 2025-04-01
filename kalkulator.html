@@ -1,93 +1,271 @@
 <!DOCTYPE html>
+
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kalkulator Hitung Cuan</title>
-  <link rel="stylesheet" href="style.minimal.css" />
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kalkulator Hitung Cuan</title>
+<link href="style.minimal.css" rel="stylesheet"/>
+<style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f9f9f9;
+      color: #111827;
+    }
     .calculate-btn {
       margin-top: 1.5rem;
-      background: #ff8409;
+      background: #0a84ff;
       color: white;
       padding: 0.75rem 1.5rem;
       border: none;
-      border-radius: 0.5rem;
-      font-weight: bold;
+      border-radius: 1rem;
+      font-weight: 600;
       font-size: 1rem;
       cursor: pointer;
-      display: block;
       width: 100%;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+      transition: background 0.3s;
     }
-  </style>
+    .calculate-btn:hover {
+      background: #006fe6;
+    }
+
+    #sidebarMenu {
+      position: fixed;
+      top: 0;
+      left: -260px;
+      width: 220px;
+      height: 100%;
+      background: #ffffff;
+      color: #111827;
+      z-index: 1000;
+      padding: 2rem 1rem;
+      transition: left 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+    }
+    #sidebarMenu.active {
+      left: 0;
+    }
+    #sidebarMenu a {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.6rem 1rem;
+      margin-bottom: 0.75rem;
+      border-radius: 0.75rem;
+      text-decoration: none;
+      color: #111827;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+    #sidebarMenu a svg {
+      width: 20px;
+      height: 20px;
+    }
+    #sidebarMenu a:hover, #sidebarMenu a.active {
+      background: #f3f4f6;
+    }
+    #sidebarBackdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.2);
+      z-index: 999;
+      display: none;
+    }
+    #sidebarBackdrop.active {
+      display: block;
+    }
+    #logoutBtn {
+      background: #ff3b30;
+      color: white;
+      padding: 0.6rem 1rem;
+      border: none;
+      border-radius: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 1.5rem;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+      .logo {
+        height: 80px !important;
+        margin: 0 auto;
+      }
+      .grid {
+        gap: 1.25rem;
+        margin-top: 1rem;
+      }
+      .grid input {
+        padding: 0.75rem;
+        font-size: 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid #e5e7eb;
+      }
+      .grid label {
+        font-weight: 500;
+        margin-bottom: 0.3rem;
+        display: block;
+        font-size: 0.95rem;
+      }
+    }
+  
+.header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.menu-btn {
+  padding: 0.5rem 1rem;
+  background: #111827;
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 1rem;
+}
+
+.logo {
+  max-width: 80px;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  margin-left: 120px;
+}
+
+
+
+
+
+
+/* Responsive logo & header */
+.header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 1rem;
+  flex-wrap: nowrap;
+}
+.logo {
+  max-width: 100px;
+  height: auto;
+  margin: 0;
+  object-fit: contain;
+}
+
+
+.result-item {
+  text-align: center;
+  margin-top: 1rem;
+}
+.result-label {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #000000;
+}
+.result-value {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #111827;
+}
+.result-box {
+  background: #22c55e;
+  padding: 1rem;
+  border-radius: 1rem;
+  text-align: center;
+  color: white;
+  margin-bottom: 1rem;
+}
+</style>
 </head>
-
 <body>
-  <div class="container">
-    <header style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
-      <!-- Kiri: Riwayat -->
-      <div>
-        <a id="historyBtn" href="riwayat.html" style="display:none; background:#10b981; color:white; padding:0.5rem 1rem; border-radius:0.5rem; text-decoration:none; font-weight:bold;">
-          🔍 Lihat Riwayat
-        </a>
-      </div>
-
-      <!-- Tengah: Logo -->
-      <div style="flex: 1; text-align: center;">
-        <img src="logo.png" alt="Logo Hitung Cuan" class="logo" style="aspect-ratio: 1/1; height: 160px; object-fit: contain;" />
-
-      </div>
-
-      <!-- Kanan: Menu + Admin + Logout -->
-      <div style="display: flex; align-items: center; gap: 0.75rem;">
-        <div class="menu-container" style="position:relative;">
-          <button onclick="toggleMenu()" style="padding: 0.5rem 1rem; background:#111827; color:white; border:none; border-radius:0.5rem; font-weight:bold;">
-            ☰ Menu
-          </button>
-          <div id="dropdownMenu" style="display:none; position:absolute; right:0; background:white; border:1px solid #e5e7eb; box-shadow:0 4px 8px rgba(0,0,0,0.1); border-radius:0.5rem; margin-top:0.5rem; z-index:99;">
-            <a href="rekap-penjualan.html" style="display:block; padding:0.75rem 1rem; text-decoration:none; color:#111827;">📋 Rekap Penjualan</a>
-            <a href="riwayat.html" style="display:block; padding:0.75rem 1rem; text-decoration:none; color:#111827;">📜 Riwayat Kalkulasi</a>
-          </div>
-        </div>
-        <a id="adminPanelLink" href="admin.html" style="display:none; background:#2563eb; color:white; padding:0.5rem 1rem; border-radius:0.5rem; text-decoration:none; font-weight:bold;">
-          Kelola User
-        </a>
-        <button id="logoutBtn" style="padding: 0.5rem 1rem; background:#ef4444; color:white; border:none; border-radius:0.5rem; font-weight:bold; cursor:pointer;">
-          Logout
-        </button>
-      </div>
-    </header>
-<h2>Kalkulator Hitung Cuan</h2>
-    <div class="grid">
-      <div><label>HPP per Produk (Rp)</label><input type="number" id="productCost" value="0" /></div>
-      <div><label>Harga Jual per Produk (Rp)</label><input type="number" id="sellingPrice" value="0" /></div>
-      <div><label>Jumlah Penjualan</label><input type="number" id="sales" value="0" /></div>
-      <div><label>Total Iklan (Rp)</label><input type="number" id="adSpend" value="0" /></div>
-      <div><label>Biaya Admin Iklan (%)</label><input type="number" id="adminFee" value="0" min="0" max="100" /></div>
-      <div><label>Estimasi Return (%)</label><input type="number" id="returnRate" value="0" min="0" max="100" /></div>
-    </div>
-
-    <button id="calculateBtn" class="calculate-btn"> Hitungin Cuannya Bro! </button>
-
-    <h3>Hasil Perhitungan</h3>
-    <div class="result">
-      <div class="result-item green"><strong>Laba Bersih per Penjualan:</strong> <span id="netProfit">Rp0</span></div>
-      <div class="result-item green"><strong>Potensi Laba Total:</strong> <span id="potentialProfit">Rp0</span></div>
-      <div class="result-item"><strong>Margin Keuntungan:</strong> <span id="profitMargin">0%</span></div>
-      <div class="result-item"><strong>ROAS:</strong> <span id="roas">0</span></div>
-      <div class="result-item"><strong>Average CPR:</strong> <span id="cpr">Rp0</span></div>
-    </div>
-
-    <h3>Saran Evaluasi Iklan</h3>
-    <div class="evaluation-box" id="adEvaluation">
-      <p>Masukkan data dan klik tombol "Hitung" untuk melihat evaluasi iklan Anda...</p>
-    </div>
-  </div>
-
-  <script type="module" src="script.js"></script>
-
-
-  <script type="module">
+<div id="sidebarBackdrop" onclick="toggleSidebar()"></div>
+<div id="sidebarMenu">
+<a class="active" href="/kalkulator">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M9 5h6M9 9h6m-6 4h6m-6 4h6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      Kalkulator
+    </a>
+    <a href="/riwayat">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M4 16h2V8H4v8zm6 0h2V4h-2v12zm6 0h2v-6h-2v6z" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Histori Kalkulator
+    </a>    
+    <a href="/rekap-penjualan">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M9 17v-2h6v2m-3-9a4 4 0 014 4v1H8v-1a4 4 0 014-4z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            Rekap Penjualan
+          </a>
+   <a href="/admin">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M9 17v-2h6v2m-3-9a4 4 0 014 4v1H8v-1a4 4 0 014-4z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                  Admin Panel
+           </a>
+    
+<button id="logoutBtn">Logout</button>
+</div>
+<div class="container">
+<header class="header-flex">
+<button class="menu-btn" onclick="toggleSidebar()">☰ Menu</button>
+<img alt="Logo Hitung Cuan" class="logo" src="logo.png"/>
+</header>
+<h2 style="text-align: center;">Kalkulator Hitung Cuan</h2>
+<div class="grid">
+<div><label>HPP per Produk (Rp)</label><input id="productCost" type="text" value=""/></div>
+<div><label>Harga Jual per Produk (Rp)</label><input id="sellingPrice" type="text" value=""/></div>
+<div><label>Jumlah Penjualan</label><input id="sales" type="number" value=""/></div>
+<div><label>Total Iklan (Rp)</label><input id="adSpend" type="text" value=""/></div>
+<div><label>Biaya Admin Iklan (%)</label><input id="adminFee" max="100" min="0" type="number" value=""/></div>
+<div><label>Estimasi Return (%)</label><input id="returnRate" max="100" min="0" type="number" value=""/></div>
+</div>
+<button class="calculate-btn" id="calculateBtn">Hitungin Cuannya Bro!</button>
+<h3>Hasil Perhitungan</h3>
+<div class="result">
+<div class="result-box green">
+<div class="result-label">Laba Bersih per Penjualan:</div>
+<div class="result-value" id="netProfit">Rp 0</div>
+</div>
+<div class="result-box green">
+<div class="result-label">Potensi Laba Total:</div>
+<div class="result-value" id="potentialProfit">Rp 0</div>
+</div>
+<div class="result-item">
+<div class="result-label">Margin Keuntungan</div>
+<div class="result-value" id="profitMargin">0%</div>
+</div>
+<div class="result-item">
+<div class="result-label">ROAS</div>
+<div class="result-value" id="roas">0</div>
+</div>
+<div class="result-item">
+<div class="result-label">Average CPR</div>
+<div class="result-value" id="cpr">Rp 0</div>
+</div>
+</div>
+<h3>Saran Evaluasi Iklan</h3>
+<div class="evaluation-box" id="adEvaluation">
+<p>Masukkan data dan klik tombol "Hitung" untuk melihat evaluasi iklan Anda...</p>
+</div>
+</div>
+<script src="script.js" type="module"></script>
+<script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
@@ -119,12 +297,6 @@
         window.location.href = "login.html";
         return;
       }
-
-      if (user.email === "pakangurame@gmail.com") {
-        document.getElementById("adminPanelLink").style.display = "inline-block";
-      }
-
-      document.getElementById("historyBtn").style.display = "inline-block";
     });
 
     document.getElementById("logoutBtn").addEventListener("click", async () => {
@@ -136,21 +308,11 @@
       calculate();
     });
   </script>
-
-
 <script>
-  function toggleMenu() {
-    const menu = document.getElementById("dropdownMenu");
-    menu.style.display = menu.style.display === "block" ? "none" : "block";
-  }
-  window.addEventListener("click", function(e) {
-    if (!e.target.closest(".menu-container")) {
-      const menu = document.getElementById("dropdownMenu");
-      if (menu) menu.style.display = "none";
+    function toggleSidebar() {
+      document.getElementById("sidebarMenu").classList.toggle("active");
+      document.getElementById("sidebarBackdrop").classList.toggle("active");
     }
-  });
-</script>
-
-
+  </script>
 </body>
 </html>

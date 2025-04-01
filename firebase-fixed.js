@@ -55,7 +55,7 @@ export async function login() {
 
     if (userDoc.exists() && userDoc.data().isActive) {
       alert("Login berhasil!");
-      window.location.href = "kalkulator.html";
+      window.location.href = "/kalkulator";
     } else {
       alert("Akun Anda belum aktif.");
       await signOut(auth);
@@ -104,10 +104,10 @@ export function cekLogin(callback) {
       } else {
         alert("Akun belum aktif.");
         await signOut(auth);
-        window.location.href = "login.html";
+        window.location.href = "/login";
       }
     } else {
-      window.location.href = "login.html";
+      window.location.href = "/login";
     }
   });
 }
@@ -130,10 +130,5 @@ export async function getRiwayatKalkulasi(uid) {
   const q = query(historyRef, orderBy("timestamp", "desc"));
   const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-}
-
-// 🗑 Fungsi: Hapus user dari Firestore
-export async function deleteUser(uid) {
-  await deleteDoc(doc(db, "users", uid));
 }
 
